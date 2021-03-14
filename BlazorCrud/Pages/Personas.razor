@@ -1,0 +1,105 @@
+﻿@page "/personas"
+
+
+@using System.Net.Http
+@using System.Net.Http.Json
+@using BlazorCrud.Data
+@using System.IO
+@using OfficeOpenXml
+@using OfficeOpenXml.Style
+@using System.Drawing
+@using BlazorCrud.Helpers
+@inject HttpClient Http
+@inject IJSRuntime JS 
+
+
+<h3>Personas</h3>
+
+<div class="row">
+    <div class="col-12 text-right">
+        <a class="btn btn-success" href="agregar">Nuevo</a>
+    </div>
+
+</div>
+
+
+<table class="table">
+    <tr>
+        <th>Id Persona Fisica</th>
+        <th>Nombre</th>
+        <th>Apellido Paterno</th>
+        <th>Apellido Materno</th>
+        <th>RFC</th>
+        <th>Fecha de Nacimiento</th>
+        <th></th>
+    </tr>
+
+    @if (oResponse != null && oResponse.Data != null)
+    {
+        @foreach (var oElement in oResponse.Data)
+        {
+            <tr>
+                <td>@oElement.IdPersonaFisica</td>
+                <td>@oElement.Nombre</td>
+                <td>@oElement.ApellidoPaterno</td>
+                <td>@oElement.ApellidoMaterno</td>
+                <td>@oElement.RFC</td>
+                <td>@oElement.FechaNacimiento</td>
+                <td>
+                    <a class="btn btn-info" href="/agregar/@oElement.IdPersonaFisica">Editar</a>
+                    <a class="btn btn-danger" href="/eliminar/@oElement.IdPersonaFisica">Eliminar</a>
+                </td>
+            </tr>
+        }
+    }
+
+</table>
+
+
+<button class="btn btn-info" @onclick="ExportarExcel">Exportar a Excel</button>
+
+
+
+@code {
+    public string Url = "api/Personas";
+    public Data.Respuesta<List<Data.Personas>> oResponse = new Data.Respuesta<List<Data.Personas>>();
+
+
+    protected override async Task OnInitializedAsync() =>
+        oResponse = await Http.GetFromJsonAsync<Data.Respuesta<List<Data.Personas>>>(Url);
+
+
+    private void ExportarExcel()
+    {
+        ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+        using (var package = new ExcelPackage())
+        {
+            try
+            {
+                var worksheet = package.Workbook.Worksheets.Add("PersonasFisicas");
+                var tableBody = worksheet.Cells["A1:A1"].LoadFromCollection(
+                    from f in oResponse.Data
+                    select new { f.IdPersonaFisica, f.Nombre, f.ApellidoPaterno, f.ApellidoMaterno, f.RFC}, true);
+
+                var header = worksheet.Cells["A1:B1"];
+                worksheet.DefaultColWidth = 25;
+                tableBody.Style.HorizontalAlignment = ExcelHorizontalAlignment.Left;
+                tableBody.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                tableBody.Style.Fill.BackgroundColor.SetColor(Color.WhiteSmoke);
+                tableBody.Style.Border.BorderAround(ExcelBorderStyle.Medium);
+                header.Style.Font.Bold = true;
+                header.Style.Font.Color.SetColor(Color.White);
+
+
+                var arr = package.GetAsByteArray();
+                JS.GuardarComo("persona.xlsx", package.GetAsByteArray());
+
+            }catch(Exception ex)
+            {
+               oResponse.Mensaje =  ex.Message;
+            }
+
+
+        }
+    }
+}

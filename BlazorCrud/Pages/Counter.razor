@@ -1,0 +1,43 @@
+﻿@page "/counter"
+
+
+@using BlazorCrud.Data
+@using System.Net.Http
+@using System.Net.Http.Json
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+
+<h1>Reporte</h1>
+
+<table class="table">
+    <tr>
+        <th>User</th>
+        <th>Nombre</th>
+        <th>Apellido Paterno</th>
+        <th>Apellido Materno</th>
+        <th>RFC</th>
+        <th>Fecha de Nacimiento</th>
+        <th></th>
+    </tr>
+
+    @if (oResponse != null && oResponse.Data != null)
+    {
+        @foreach (var oElement in oResponse.Data)
+        {
+            <tr>
+                <td>@oElement.password</td>
+                <td>@oElement.username</td>
+            </tr>
+        }
+    }
+
+</table>
+ 
+@code {
+    public string Url = "api/Personas";
+    public Data.Respuesta<List<Token>> oResponse = new Data.Respuesta<List<Data.Token>>();
+
+
+    protected override async Task OnInitializedAsync() =>
+        oResponse = await Http.GetFromJsonAsync<Data.Respuesta<List<Data.Token>>>(Url);
+}

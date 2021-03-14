@@ -1,0 +1,37 @@
+﻿@page "/eliminar/{Id:int}"
+
+@using BlazorCrud.Data
+@using System.Net.Http
+@using System.Net.Http.Json
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+
+
+<h3>Eliminar</h3>
+
+<p>¿Deseas eliminar a la persona @Id? </p>
+
+<div>
+    <button @onclick="Cancelar">Cancelar</button>
+    <button @onclick="Delete">Eliminar</button>
+</div>
+@code {
+
+
+    [Parameter]
+    public int Id { get; set; }
+    public string Url = "/api/Personas";
+    Respuesta<object> oResponse = new Respuesta<object>();
+
+    private void Cancelar() => NavigationManager.NavigateTo("/personas");
+
+    private async Task Delete()
+    {
+
+
+        var response = await Http.DeleteAsync(Url+"/"+Id);
+        oResponse = response.Content.ReadFromJsonAsync<Respuesta<object>>().Result;
+        NavigationManager.NavigateTo("/personas");
+
+    }
+}

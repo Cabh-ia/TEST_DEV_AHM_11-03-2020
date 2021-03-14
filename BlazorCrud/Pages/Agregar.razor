@@ -1,0 +1,96 @@
+﻿@page "/agregar"
+@page "/agregar/{Id:int}"
+
+@using Data
+@using System.Net.Http
+@using System.Net.Http.Json
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+
+<h3>Agregar</h3>
+
+<EditForm Model="@oPersonas">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="form-group row mb-1">
+                <label class="col-sm-3">Nombre</label>
+                <div class="col-sm-9">
+                    <InputText class="form-control" @bind-Value="@oPersonas.Nombre"></InputText>
+                </div>
+            </div>
+            <div class="form-group row mb-1">
+                <label class="col-sm-3">Apellido Paterno</label>
+                <div class="col-sm-9">
+                    <InputText class="form-control" @bind-Value="@oPersonas.ApellidoPaterno"></InputText>
+                </div>
+            </div>
+            <div class="form-group row mb-1">
+                <label class="col-sm-3">Apellido Materno</label>
+                <div class="col-sm-9">
+                    <InputText class="form-control" @bind-Value="@oPersonas.ApellidoMaterno"></InputText>
+                </div>
+            </div>
+            <div class="form-group row mb-1">
+                <label class="col-sm-3">Fecha de Nacimiento</label>
+                <div class="col-sm-9">
+                    <InputDate class="form-control" @bind-Value="@oPersonas.FechaNacimiento"></InputDate>
+                </div>
+            </div>
+            <div class="form-group row mb-1">
+                <label class="col-sm-3">RFC</label>
+                <div class="col-sm-9">
+                    <InputText class="form-control" @bind-Value="@oPersonas.RFC"></InputText>
+                </div>
+            </div>
+
+            <div class="form-group row mb-1">
+                <div class="col-sm-12">
+                    <button class="btn btn-primary" @onclick="Save">Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</EditForm>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    Data.Personas oPersonas = new Data.Personas();
+    Respuesta<object> oResponse = new Respuesta<object>();
+    Respuesta<Data.Personas> oResponseP = new Respuesta<Data.Personas>();
+    public string Url = "/api/Personas";
+
+    
+
+
+
+    private async Task Save()
+    {
+        if(Id!= 0) //Actualización de datos
+        {
+            var response = await Http.PutAsJsonAsync<Data.Personas>(Url, oPersonas);
+            oResponse = response.Content.ReadFromJsonAsync<Respuesta<object>>().Result;
+        }
+        else //Creación de datos
+        {
+            var response = await Http.PostAsJsonAsync<Data.Personas>(Url, oPersonas);
+            oResponse = response.Content.ReadFromJsonAsync<Respuesta<object>>().Result;
+        }
+
+
+        NavigationManager.NavigateTo("/personas");
+
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if(Id!= 0)
+        {
+            oResponseP = await Http.GetFromJsonAsync<Data.Respuesta<Data.Personas>>(Url + "/" + Id);
+            oPersonas = oResponseP.Data;
+        }
+
+    }
+
+}
